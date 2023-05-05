@@ -4,18 +4,26 @@ Copyright © 2023 Will Hutchinson will@thehutchery.com
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/whutchinson98/lambda-invoker-cli/cmd/invoke"
 )
+
+var version string = "0.0.0"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "lambda-invoker-cli",
-	Short: "Invokes a lambda to simulate an API call",
-	Long: `Invokes a lambda with the provided json file to simulate an API call.
-	This allows users to deploy lambdas and easily test them via this CLI.`,
-	Run: func(cmd *cobra.Command, args []string) {},
+	Short: "Useful CLI for working with lambdas",
+	Long:  `Useful CLI tool for working with lambdas to allow increased developer productivity`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ver, _ := cmd.Flags().GetBool("version")
+		if ver {
+			fmt.Printf("Version: %s\n", version)
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -28,8 +36,7 @@ func Execute() {
 }
 
 func init() {
-	// TODO: Add this!!
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.lambda-invoker-cli.yaml)")
-	rootCmd.Flags().String("region", "us-east-1", "The AWS region the Secret is located")
-	rootCmd.Flags().StringP("request", "r", "./request.json", "Relative path to your request file")
+	cobra.OnInitialize()
+	rootCmd.Flags().Bool("version", false, "Get the version of the CLI")
+	rootCmd.AddCommand(invoke.InvokeCmd)
 }

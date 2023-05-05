@@ -1,0 +1,52 @@
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19"
+      - name: Test
+        run: go test ./...
+  release:
+    needs: [test]
+    runs-on: ubuntu-latest
+    strategy:
+       matrix:
+         include:
+           - build: m1_mac
+             os: darwin
+             arch: arm64
+           - build: linux
+             os: linux
+             arch: amd64
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19"
+      - name: Get version
+        id: version
+        run: echo "version=$(echo -e ${GITHUB_REF#refs/tags/v} | sed s/-.*$//)" >> $GITHUB_OUTPUT
+      - name: Build
+        run: env GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o lambda-invoker-cli-${{ matrix.os }}-${{ matrix.arch }} -ldflags="-X 'github.com/whutchinson98/lambda-invoker-cli/cmd.version=${{ steps.version.outputs.version }}'" .
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: ./lambda-invoker-cli-${{matrix.os}}-${{matrix.arch}}
+          name: ${{ steps.version.outputs.version }}
+          tag: v${{ steps.version.outputs.version }}
+          body: |
+            Automated build of lambda-invoker-cli.

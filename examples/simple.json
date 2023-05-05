@@ -1,0 +1,8 @@
+{
+  "headers": {
+    "Authorization": "Bearer test-auth"
+  },
+  "body": {
+    "name": "hello world"
+  }
+}
